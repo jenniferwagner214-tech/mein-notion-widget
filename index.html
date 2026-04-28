@@ -11,7 +11,7 @@
             height: 100vh;
             margin: 0;
             background-color: transparent;
-            color: #000000 !important; 
+            color: #000000;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
         }
@@ -21,30 +21,31 @@
             user-select: none;
         }
 
+        /* Status-Text: Jetzt ohne farbigen Hintergrund, nur cleaner Text */
         #statusLabel {
-            font-size: 11px;
+            font-size: 12px;
             text-transform: uppercase;
-            letter-spacing: 0.4em;
-            margin-bottom: -2px;
-            opacity: 0.4;
+            letter-spacing: 0.5em;
+            margin-bottom: 5px;
             font-weight: 600;
             color: #000000;
-            transition: opacity 0.3s;
+            opacity: 0.4;
         }
 
         #timer {
             font-size: 5.5rem;
-            font-weight: 300; 
+            font-weight: 300;
             margin: 0;
+            line-height: 1;
             font-variant-numeric: tabular-nums;
             letter-spacing: -3px;
             color: #000000;
         }
 
         .controls {
-            margin-top: 5px;
+            margin-top: 15px;
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
+            transition: opacity 0.3s ease;
         }
 
         .timer-wrapper:hover .controls {
@@ -53,51 +54,51 @@
 
         button {
             background: transparent;
-            border: none;
-            padding: 8px 12px;
+            border: 1px solid rgba(0,0,0,0.1);
+            padding: 6px 12px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
+            letter-spacing: 0.1em;
             color: #000000;
-            opacity: 0.5;
-            font-weight: 500;
+            margin: 0 2px;
+            transition: all 0.2s;
         }
 
         button:hover {
-            opacity: 1;
+            border-color: #000000;
+            background: rgba(0,0,0,0.05);
         }
 
         .dot {
-            color: #000000;
             opacity: 0.2;
-            margin-left: 2px;
         }
     </style>
 </head>
 <body>
 
 <div class="timer-wrapper">
-    <div id="statusLabel">FOCUS</div>
+    <div id="statusLabel">FOKUS</div>
     <div id="timer">25:00<span class="dot">.</span></div>
     
     <div class="controls">
         <button id="startBtn">Start</button>
+        <button id="pauseModeBtn">Pause-Modus</button>
         <button id="resetBtn">Reset</button>
-        <button id="switchBtn">Modus</button>
     </div>
 </div>
 
 <script>
-    let isFocusPhase = true;
     let timeLeft = 25 * 60;
     let timerId = null;
     let isRunning = false;
+    let currentMode = 'focus'; // 'focus' oder 'break'
 
     const timerDisplay = document.getElementById('timer');
     const startBtn = document.getElementById('startBtn');
     const resetBtn = document.getElementById('resetBtn');
-    const switchBtn = document.getElementById('switchBtn');
+    const pauseModeBtn = document.getElementById('pauseModeBtn');
     const statusLabel = document.getElementById('statusLabel');
 
     function updateDisplay() {
@@ -106,18 +107,18 @@
         timerDisplay.innerHTML = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}<span class="dot">.</span>`;
     }
 
-    function toggleMode() {
+    function setMode(mode) {
         clearInterval(timerId);
         isRunning = false;
         startBtn.textContent = 'Start';
+        currentMode = mode;
         
-        isFocusPhase = !isFocusPhase;
-        if (isFocusPhase) {
+        if (mode === 'focus') {
             timeLeft = 25 * 60;
-            statusLabel.textContent = "FOCUS";
+            statusLabel.textContent = 'FOKUS';
         } else {
             timeLeft = 5 * 60;
-            statusLabel.textContent = "BREAK";
+            statusLabel.textContent = 'PAUSE';
         }
         updateDisplay();
     }
@@ -133,26 +134,30 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerId);
                     isRunning = false;
-                    alert(isFocusPhase ? "Zeit für eine Pause!" : "Pause vorbei!");
-                    toggleMode(); // Wechselt automatisch nach Ablauf
+                    alert(currentMode === 'focus' ? "Zeit für eine Pause!" : "Pause vorbei!");
+                    setMode(currentMode === 'focus' ? 'break' : 'focus');
                 }
             }, 1000);
-            startBtn.textContent = 'Pause';
+            startBtn.textContent = 'Stopp';
         }
         isRunning = !isRunning;
     }
 
-    function resetTimer() {
-        clearInterval(timerId);
-        isRunning = false;
-        timeLeft = isFocusPhase ? 25 * 60 : 5 * 60;
-        updateDisplay();
-        startBtn.textContent = 'Start';
-    }
-
     startBtn.addEventListener('click', toggleTimer);
-    resetBtn.addEventListener('click', resetTimer);
-    switchBtn.addEventListener('click', toggleMode);
+    
+    resetBtn.addEventListener('click', () => {
+        setMode(currentMode);
+    });
+
+    pauseModeBtn.addEventListener('click', () => {
+        if (currentMode === 'focus') {
+            setMode('break');
+            pauseModeBtn.textContent = 'Fokus-Modus';
+        } else {
+            setMode('focus');
+            pauseModeBtn.textContent = 'Pause-Modus';
+        }
+    });
 
     updateDisplay();
 </script>
