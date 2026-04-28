@@ -3,13 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        :root {
-            --focus-color: #eb5757;
-            --break-color: #52a881;
-            --bg-color: rgba(255, 255, 255, 0.9);
-            --text-color: #37352f;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             display: flex;
@@ -18,93 +11,80 @@
             height: 100vh;
             margin: 0;
             background-color: transparent;
-            color: var(--text-color);
+            color: #000000 !important; 
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .container {
+        .timer-wrapper {
             text-align: center;
-            padding: 25px;
-            border-radius: 20px;
-            background: var(--bg-color);
-            border: 1px solid #e9e9e7;
-            width: 280px;
-            transition: border 0.3s ease;
+            user-select: none;
         }
 
-        .status-badge {
-            font-size: 0.7rem;
+        #statusLabel {
+            font-size: 11px;
             text-transform: uppercase;
-            letter-spacing: 0.15em;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-weight: 700;
-            margin-bottom: 10px;
-            display: inline-block;
-        }
-
-        .focus-mode .status-badge {
-            background: #ffe2e2;
-            color: var(--focus-color);
-        }
-
-        .break-mode .status-badge {
-            background: #e2f5ec;
-            color: var(--break-color);
+            letter-spacing: 0.4em;
+            margin-bottom: -2px;
+            opacity: 0.4;
+            font-weight: 600;
+            color: #000000;
+            transition: opacity 0.3s;
         }
 
         #timer {
-            font-size: 4rem;
-            font-weight: 600;
-            margin: 5px 0;
+            font-size: 5.5rem;
+            font-weight: 300; 
+            margin: 0;
             font-variant-numeric: tabular-nums;
-            letter-spacing: -2px;
+            letter-spacing: -3px;
+            color: #000000;
         }
 
         .controls {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 20px;
+            margin-top: 5px;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+
+        .timer-wrapper:hover .controls {
+            opacity: 1;
         }
 
         button {
-            background: #fff;
-            border: 1px solid #e9e9e7;
-            padding: 10px 20px;
-            border-radius: 10px;
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #000000;
+            opacity: 0.5;
             font-weight: 500;
-            transition: all 0.2s;
-            color: var(--text-color);
-            flex: 1;
         }
 
         button:hover {
-            background: #f8f8f7;
-            border-color: #d3d3d1;
+            opacity: 1;
         }
 
-        #startBtn {
-            background: var(--text-color);
-            color: white;
-            border: none;
-        }
-
-        #startBtn:hover {
-            opacity: 0.9;
+        .dot {
+            color: #000000;
+            opacity: 0.2;
+            margin-left: 2px;
         }
     </style>
 </head>
-<body class="focus-mode">
+<body>
 
-<div class="container" id="mainContainer">
-    <div class="status-badge" id="statusLabel">Focus Session</div>
-    <div id="timer">25:00</div>
+<div class="timer-wrapper">
+    <div id="statusLabel">FOCUS</div>
+    <div id="timer">25:00<span class="dot">.</span></div>
     
     <div class="controls">
         <button id="startBtn">Start</button>
         <button id="resetBtn">Reset</button>
+        <button id="switchBtn">Modus</button>
     </div>
 </div>
 
@@ -117,25 +97,27 @@
     const timerDisplay = document.getElementById('timer');
     const startBtn = document.getElementById('startBtn');
     const resetBtn = document.getElementById('resetBtn');
+    const switchBtn = document.getElementById('switchBtn');
     const statusLabel = document.getElementById('statusLabel');
-    const body = document.body;
 
     function updateDisplay() {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        timerDisplay.innerHTML = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}<span class="dot">.</span>`;
     }
 
-    function switchMode() {
+    function toggleMode() {
+        clearInterval(timerId);
+        isRunning = false;
+        startBtn.textContent = 'Start';
+        
         isFocusPhase = !isFocusPhase;
         if (isFocusPhase) {
             timeLeft = 25 * 60;
-            statusLabel.textContent = "Focus Session";
-            body.className = "focus-mode";
+            statusLabel.textContent = "FOCUS";
         } else {
             timeLeft = 5 * 60;
-            statusLabel.textContent = "Short Break";
-            body.className = "break-mode";
+            statusLabel.textContent = "BREAK";
         }
         updateDisplay();
     }
@@ -143,7 +125,7 @@
     function toggleTimer() {
         if (isRunning) {
             clearInterval(timerId);
-            startBtn.textContent = 'Fortsetzen';
+            startBtn.textContent = 'Start';
         } else {
             timerId = setInterval(() => {
                 timeLeft--;
@@ -151,8 +133,8 @@
                 if (timeLeft <= 0) {
                     clearInterval(timerId);
                     isRunning = false;
-                    switchMode();
-                    alert(isFocusPhase ? "Pause vorbei! Bereit?" : "Zeit für eine Pause!");
+                    alert(isFocusPhase ? "Zeit für eine Pause!" : "Pause vorbei!");
+                    toggleMode(); // Wechselt automatisch nach Ablauf
                 }
             }, 1000);
             startBtn.textContent = 'Pause';
@@ -163,16 +145,14 @@
     function resetTimer() {
         clearInterval(timerId);
         isRunning = false;
-        isFocusPhase = true;
-        timeLeft = 25 * 60;
-        statusLabel.textContent = "Focus Session";
-        body.className = "focus-mode";
+        timeLeft = isFocusPhase ? 25 * 60 : 5 * 60;
         updateDisplay();
         startBtn.textContent = 'Start';
     }
 
     startBtn.addEventListener('click', toggleTimer);
     resetBtn.addEventListener('click', resetTimer);
+    switchBtn.addEventListener('click', toggleMode);
 
     updateDisplay();
 </script>
